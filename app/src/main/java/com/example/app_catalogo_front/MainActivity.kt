@@ -12,9 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -40,10 +41,10 @@ fun MainScreen() {
     val scope = rememberCoroutineScope()
 
     val navItems = listOf(
-        "Iniciar Sesión",
-        "Ver carrito",
-        "Ver Catálogo",
-        "Quiénes somos"
+        R.string.iniciar_sesion,
+        R.string.ver_carrito,
+        R.string.ver_catalogo,
+        R.string.quienes_somos
     )
 
     ModalNavigationDrawer(
@@ -53,16 +54,16 @@ fun MainScreen() {
                 Spacer(Modifier.height(12.dp))
                 navItems.forEach { item ->
                     NavigationDrawerItem(
-                        label = { Text(item) },
+                        label = { Text(stringResource(id = item)) },
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
                             when (item) {
-                                "Iniciar Sesión" -> {
+                                R.string.iniciar_sesion -> {
                                     val intent = Intent(context, LoginActivity::class.java)
                                     context.startActivity(intent)
                                 }
-                                "Ver Catálogo" -> {
+                                R.string.ver_catalogo -> {
                                     val intent = Intent(context, CatalogoActivity::class.java)
                                     context.startActivity(intent)
                                 }
@@ -75,13 +76,13 @@ fun MainScreen() {
         }
     ) {
         Scaffold(
-            containerColor = Color(0xFFFFF5E1),
+            containerColor = colorResource(id = R.color.app_background),
             topBar = {
                 TopAppBar(
-                    title = { Text("Pastelería Mil Sabores") },
+                    title = { Text(stringResource(id = R.string.main_title)) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menú")
+                            Icon(Icons.Filled.Menu, contentDescription = stringResource(id = R.string.menu_description))
                         }
                     }
                 )
@@ -108,7 +109,7 @@ fun PantallaPrincipal(modifier: Modifier = Modifier) {
     ) {
         item {
             Text(
-                text = "50 años endulzando la vida de los Chilenos",
+                text = stringResource(id = R.string.main_subtitle),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -135,7 +136,7 @@ fun CakeImage(imageUrl: String) {
     ) {
         AsyncImage(
             model = imageUrl,
-            contentDescription = "Pastel",
+            contentDescription = stringResource(id = R.string.cake_image_description),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -150,7 +151,7 @@ fun Footer() {
             .padding(top = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Contacto: +569-18152214", style = MaterialTheme.typography.bodyMedium)
-        Text("Dirección: Americo Vespucio 1501, Cerrillos", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(id = R.string.contact), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(id = R.string.address), style = MaterialTheme.typography.bodyMedium)
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,7 +25,7 @@ fun CatalogoScreen(modifier: Modifier = Modifier, viewModel: CatalogoViewModel) 
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = Color(0xFFFFF5E1) // fondo
+        color = colorResource(id = R.color.app_background) // fondo
     ) {
         Crossfade(targetState = productos.isEmpty(), label = "ContentFade", animationSpec = tween(durationMillis = 1000)) {
             if (it) {

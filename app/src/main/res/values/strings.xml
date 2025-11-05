@@ -2,4 +2,14 @@
     <string name="app_name">App-catalogo-front</string>
     <string name="title_activity_catalogo">Catálogo</string>
     <string name="title_activity_login">Iniciar Sesión</string>
+    <string name="iniciar_sesion">Iniciar Sesión</string>
+    <string name="ver_carrito">Ver carrito</string>
+    <string name="ver_catalogo">Ver Catálogo</string>
+    <string name="quienes_somos">Quiénes somos</string>
+    <string name="menu_description">Menú</string>
+    <string name="main_title">Pastelería Mil Sabores</string>
+    <string name="main_subtitle">50 años endulzando la vida de los Chilenos</string>
+    <string name="cake_image_description">Pastel</string>
+    <string name="contact">Contacto: +569-18152214</string>
+    <string name="address">Dirección: Americo Vespucio 1501, Cerrillos</string>
 </resources>
