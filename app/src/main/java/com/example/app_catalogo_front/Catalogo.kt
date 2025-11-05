@@ -1,5 +1,7 @@
 package com.example.app_catalogo_front
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,33 +19,29 @@ import com.example.app_catalogo_front.data.Producto
 import com.example.app_catalogo_front.viewmodel.CatalogoViewModel
 
 @Composable
-fun CatalogoScreen(viewModel: CatalogoViewModel) {
+fun CatalogoScreen(modifier: Modifier = Modifier, viewModel: CatalogoViewModel) {
     val productos by viewModel.productos.collectAsState()
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFFFF5E1) // fondo color crema claro
+        modifier = modifier.fillMaxSize(),
+        color = Color(0xFFFFF5E1) // fondo
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 80.dp, start = 16.dp, end = 16.dp, bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "🛍️ Catálogo de Productos",
-                color = Color(0xFF4E342E),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (productos.isEmpty()) {
-                Text("Cargando productos...", color = Color(0xFF6D4C41), fontSize = 16.sp)
+        Crossfade(targetState = productos.isEmpty(), label = "ContentFade", animationSpec = tween(durationMillis = 1000)) {
+            if (it) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = Color(0xFF4E342E))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Cargando productos...", color = Color(0xFF6D4C41), fontSize = 16.sp)
+                    }
+                }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(productos) { producto ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(productos, key = { prod -> prod.codigo }) { producto ->
                         ProductoCard(producto)
                     }
                 }

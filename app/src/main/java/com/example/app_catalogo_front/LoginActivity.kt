@@ -3,6 +3,9 @@ package com.example.app_catalogo_front
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -11,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.app_catalogo_front.ui.theme.AppcatalogofrontTheme
@@ -49,6 +53,9 @@ class LoginActivity : ComponentActivity() {
 fun LoginScreen(modifier: Modifier = Modifier) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "ScaleAnim")
 
     Box(
         modifier = modifier
@@ -86,7 +93,13 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 Button(
                     onClick = { /* Lógica de inicio de sesión no implementada */ },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC0CB)),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                    interactionSource = interactionSource
                 ) {
                     Text("Ingresar", color = Color.Black)
                 }
