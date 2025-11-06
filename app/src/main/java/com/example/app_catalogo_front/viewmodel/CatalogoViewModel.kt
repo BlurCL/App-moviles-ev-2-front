@@ -16,9 +16,10 @@ class CatalogoViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             try {
-                _productos.value = RetrofitInstance.api.getProductos()
+                val lista = RetrofitInstance.api.getProductos()
+                _productos.value = lista
             } catch (e: Exception) {
-                // Handle error
+                e.printStackTrace()
             }
         }
     }
