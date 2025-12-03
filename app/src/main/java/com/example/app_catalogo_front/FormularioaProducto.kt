@@ -1,6 +1,5 @@
 package com.example.app_catalogo_front
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -21,6 +20,7 @@ fun FormularioProductoScreen(
     var nombre by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
     var precioStr by remember { mutableStateOf("") }
+    var urlImagen by remember { mutableStateOf("") }
 
     var errorMensaje by remember { mutableStateOf<String?>(null) }
 
@@ -61,33 +61,47 @@ fun FormularioProductoScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo opcional para la URL de la imagen
+            OutlinedTextField(
+                value = urlImagen,
+                onValueChange = { urlImagen = it },
+                label = { Text("URL de imagen (opcional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             if (errorMensaje != null) {
-                Text(text = errorMensaje!!, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = errorMensaje!!,
+                    color = MaterialTheme.colorScheme.error
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             Button(
                 onClick = {
                     if (nombre.isBlank() || categoria.isBlank() || precioStr.isBlank()) {
-                        errorMensaje = "Por favor completa todos los campos"
+                        errorMensaje = "Por favor completa todos los campos obligatorios"
                     } else {
-                        // CAMBIO AQUÍ: Convertimos a BigDecimal en lugar de Int
                         try {
                             val precio = BigDecimal(precioStr)
 
                             val nuevoProducto = Producto(
-                                codigo = 0,
-                                nombre = nombre,
+                                codigo = 0,                      // el backend genera el ID
                                 categoria = categoria,
-                                precio = precio
+                                nombre = nombre,
+                                precio = precio,
+                                urlImagen = urlImagen.ifBlank { null }
                             )
+
                             viewModel.agregarProducto(nuevoProducto) {
                                 onNavigateBack()
                             }
-                        } catch (e: NumberFormatException) {
+
+                        } catch (_: NumberFormatException) {
                             errorMensaje = "El precio debe ser un número válido"
                         }
                     }
