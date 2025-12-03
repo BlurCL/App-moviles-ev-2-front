@@ -14,6 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Appcatalogofront">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,20 +22,28 @@
             android:theme="@style/Theme.Appcatalogofront">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".CatalogoActivity"
             android:label="@string/title_activity_catalogo"
             android:theme="@style/Theme.Appcatalogofront">
         </activity>
+
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Appcatalogofront">
         </activity>
+
+        <activity
+            android:name=".CarritoActivity"
+            android:label="Mi Carrito"
+            android:theme="@style/Theme.Appcatalogofront">
+        </activity>
+
     </application>
 
 </manifest>

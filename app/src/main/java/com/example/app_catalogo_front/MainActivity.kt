@@ -9,12 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,11 +60,20 @@ fun MainScreen() {
                             scope.launch { drawerState.close() }
                             when (item) {
                                 R.string.iniciar_sesion -> {
-                                    val intent = Intent(context, LoginActivity::class.java)
+                                    context.startActivity(
+                                        Intent(context, LoginActivity::class.java)
+                                    )
+                                }
+                                // --- AQUÍ AGREGAMOS LA OPCIÓN DEL CARRITO ---
+                                R.string.ver_carrito -> {
+                                    val intent = Intent(context, CarritoActivity::class.java)
                                     context.startActivity(intent)
                                 }
+                                // --------------------------------------------
                                 R.string.ver_catalogo -> {
-                                    val intent = Intent(context, CatalogoActivity::class.java)
+                                    val intent = Intent(context, CatalogoActivity::class.java).apply {
+                                        putExtra("esAdmin", false)
+                                    }
                                     context.startActivity(intent)
                                 }
                             }
@@ -76,13 +85,15 @@ fun MainScreen() {
         }
     ) {
         Scaffold(
-            containerColor = colorResource(id = R.color.app_background),
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(id = R.string.main_title)) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Filled.Menu, contentDescription = stringResource(id = R.string.menu_description))
+                            Icon(
+                                Icons.Filled.Menu,
+                                contentDescription = stringResource(id = R.string.menu_description)
+                            )
                         }
                     }
                 )

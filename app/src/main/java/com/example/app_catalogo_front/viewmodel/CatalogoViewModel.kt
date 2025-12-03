@@ -11,33 +11,32 @@ import kotlinx.coroutines.launch
 
 class CatalogoViewModel : ViewModel() {
 
-    // Lista de productos
+    // --- ESTADO DE TUS PRODUCTOS ---
     private val _productos = MutableStateFlow<List<Producto>>(emptyList())
     val productos: StateFlow<List<Producto>> = _productos
 
-    // NUEVO: Aquí guardaremos el valor del Dolar
+    // --- ESTADO DE LA API EXTERNA (DÓLAR) ---
     private val _valorDolar = MutableStateFlow<Double?>(null)
     val valorDolar: StateFlow<Double?> = _valorDolar
 
     init {
-        fetchProductos()
-        fetchDolar() // Al iniciar, buscamos el precio del dólar
+        fetchProductos() // Carga tu base de datos
+        fetchDolar()     // Carga la API externa
     }
 
-    // --- API EXTERNA (Dolar) ---
+    // Lógica para traer el Dólar
     fun fetchDolar() {
         viewModelScope.launch {
             try {
-                // Llamamos a la API de mindicador.cl
                 val respuesta = RetrofitIndicadores.api.obtenerIndicadores()
                 _valorDolar.value = respuesta.dolar.valor
             } catch (e: Exception) {
-                e.printStackTrace() // Si falla, simplemente no se mostrará
+                e.printStackTrace()
             }
         }
     }
 
-    // --- TUS PRODUCTOS (CRUD Local) ---
+    // --- LÓGICA DE TUS PRODUCTOS (CRUD) ---
     fun fetchProductos() {
         viewModelScope.launch {
             try {

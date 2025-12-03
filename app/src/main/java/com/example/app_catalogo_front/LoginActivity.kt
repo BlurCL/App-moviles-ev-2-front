@@ -1,20 +1,29 @@
 package com.example.app_catalogo_front
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.app_catalogo_front.ui.theme.AppcatalogofrontTheme
@@ -26,7 +35,7 @@ class LoginActivity : ComponentActivity() {
         setContent {
             AppcatalogofrontTheme {
                 Scaffold(
-                    containerColor = Color(0xFF4E342E), // Color de fondo marrón oscuro
+                    containerColor = Color(0xFF4E342E), // Fondo marrón oscuro
                     topBar = {
                         TopAppBar(
                             title = { Text("Iniciar Sesión", color = Color.White) },
@@ -36,7 +45,10 @@ class LoginActivity : ComponentActivity() {
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { finish() }) {
-                                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Volver"
+                                    )
                                 }
                             }
                         )
@@ -51,11 +63,20 @@ class LoginActivity : ComponentActivity() {
 
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier) {
+
+    // Ya tienes la referencia al contexto aquí, ¡perfecto!
+    val context = LocalContext.current
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMensaje by remember { mutableStateOf<String?>(null) }
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "ScaleAnim")
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        label = "ScaleAnim"
+    )
 
     Box(
         modifier = modifier
@@ -77,12 +98,14 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     text = "Bienvenido de Nuevo 👋",
                     style = MaterialTheme.typography.headlineMedium
                 )
+
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("Usuario") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -90,9 +113,37 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (errorMensaje != null) {
+                    Text(
+                        text = errorMensaje!!,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
                 Button(
-                    onClick = { /* Lógica de inicio de sesión no implementada */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC0CB)),
+                    onClick = {
+                        // LOGIN SIMPLIFICADO
+                        val (esValido, esAdmin) = when {
+                            username == "admin" && password == "admin123" -> true to true
+                            username == "cliente" && password == "cliente123" -> true to false
+                            else -> false to false
+                        }
+
+                        if (!esValido) {
+                            errorMensaje = "Usuario o contraseña incorrectos"
+                        } else {
+                            errorMensaje = null
+                            // Se usa 'context' para crear el Intent y lanzar la Activity
+                            val intent = Intent(context, CatalogoActivity::class.java).apply {
+                                putExtra("esAdmin", true)   // Se mantiene tu lógica para forzar el modo admin
+                            }
+                            context.startActivity(intent)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFC0CB) // Rosadito
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer {
@@ -103,6 +154,13 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 ) {
                     Text("Ingresar", color = Color.Black)
                 }
+
+                // Ayuda para el profe / pruebas
+                Text(
+                    text = "admin / admin123 (admin)\ncliente / cliente123 (cliente)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
             }
         }
     }
