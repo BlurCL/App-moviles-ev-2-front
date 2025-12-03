@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -38,21 +38,25 @@ fun CatalogoScreen(
 ) {
     val productos by viewModel.productos.collectAsState()
     val valorDolar by viewModel.valorDolar.collectAsState()
+    val context = LocalContext.current // Necesitamos el contexto para vibrar y navegar
 
+    // ESTADO PARA SABER SI ESTAMOS EDITANDO O CREANDO
     var mostrarFormulario by remember { mutableStateOf(false) }
-
-    // Obtenemos el contexto para poder navegar al Carrito
-    val context = LocalContext.current
+    var productoAEditar by remember { mutableStateOf<Producto?>(null) }
 
     Surface(
         modifier = modifier.fillMaxSize(),
         color = colorResource(id = R.color.app_background)
     ) {
-        // Si estamos en modo Admin y se activó el formulario, lo mostramos
+        // Si hay que mostrar formulario (ya sea para crear o editar)
         if (mostrarFormulario && esAdmin) {
             FormularioProductoScreen(
                 viewModel = viewModel,
-                onNavigateBack = { mostrarFormulario = false }
+                productoAEditar = productoAEditar, // Pasamos el producto (puede ser null)
+                onNavigateBack = {
+                    mostrarFormulario = false
+                    productoAEditar = null // Limpiamos al volver
+                }
             )
         } else {
             Scaffold(
@@ -63,82 +67,69 @@ fun CatalogoScreen(
                                 Text("Pastelería Mil Sabores")
                                 if (valorDolar != null) {
                                     Text(
-                                        text = "Dólar hoy: $${valorDolar}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF4E342E),
-                                        fontSize = 14.sp
+                                        text = "Dólar: $${valorDolar}",
+                                        style = MaterialTheme.typography.bodySmall
                                     )
                                 }
                             }
                         },
-                        // BOTÓN DEL CARRITO EN LA BARRA SUPERIOR
                         actions = {
                             IconButton(onClick = {
-                                val intent = Intent(context, CarritoActivity::class.java)
-                                context.startActivity(intent)
+                                context.startActivity(Intent(context, CarritoActivity::class.java))
                             }) {
-                                Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
-                                    contentDescription = "Ver Carrito",
-                                    tint = Color(0xFF4E342E)
-                                )
+                                Icon(Icons.Default.ShoppingCart, "Carrito", tint = Color(0xFF4E342E))
                             }
                         },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent
-                        )
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                     )
                 },
-                // BOTÓN FLOTANTE (+) SOLO PARA ADMIN
                 floatingActionButton = {
                     if (esAdmin) {
                         FloatingActionButton(
-                            onClick = { mostrarFormulario = true },
+                            onClick = {
+                                // VIBRACIÓN AL TOCAR EL BOTÓN FLOTANTE
+                                vibrar(context)
+                                productoAEditar = null // Aseguramos que es NUEVO
+                                mostrarFormulario = true
+                            },
                             containerColor = Color(0xFF795548),
                             contentColor = Color.White
                         ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Agregar Producto"
-                            )
+                            Icon(Icons.Default.Add, "Agregar")
                         }
                     }
                 },
                 containerColor = Color.Transparent
             ) { paddingValues ->
-
-                Crossfade(
-                    targetState = productos.isEmpty(),
-                    label = "ContentFade",
-                    animationSpec = tween(durationMillis = 500),
-                    modifier = Modifier.padding(paddingValues)
-                ) { vacio ->
-                    if (vacio) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No hay productos aún.\n¡Agrega el primero!",
-                                textAlign = TextAlign.Center,
-                                color = Color.Gray,
-                                fontSize = 18.sp
+                if (productos.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No hay productos aún", color = Color.Gray)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(productos, key = { it.codigo }) { producto ->
+                            ProductoCard(
+                                producto = producto,
+                                esAdmin = esAdmin,
+                                onEliminar = {
+                                    // VIBRACIÓN AL ELIMINAR
+                                    vibrar(context)
+                                    viewModel.eliminarProducto(producto.codigo)
+                                },
+                                onEditar = {
+                                    // VIBRACIÓN AL EDITAR
+                                    vibrar(context)
+                                    productoAEditar = producto // Guardamos cual editar
+                                    mostrarFormulario = true   // Abrimos formulario
+                                }
                             )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(productos, key = { prod -> prod.codigo }) { producto ->
-                                ProductoCard(
-                                    producto = producto,
-                                    esAdmin = esAdmin,
-                                    onEliminar = { viewModel.eliminarProducto(producto.codigo) }
-                                )
-                            }
                         }
                     }
                 }
@@ -151,39 +142,34 @@ fun CatalogoScreen(
 fun ProductoCard(
     producto: Producto,
     esAdmin: Boolean,
-    onEliminar: () -> Unit
+    onEliminar: () -> Unit,
+    onEditar: () -> Unit
 ) {
+    // Obtenemos el contexto aquí también por si acaso
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            // IMAGEN DEL PRODUCTO (SI TIENE URL)
-            // (Si no usas URL en tu formulario, esto no se mostrará, no te preocupes)
-             if (!producto.urlImagen.isNullOrBlank()) {
+            // Imagen (si existe)
+            if (!producto.urlImagen.isNullOrBlank()) {
                 AsyncImage(
                     model = producto.urlImagen,
-                    contentDescription = "Imagen de ${producto.nombre}",
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
             }
 
-
-            // TEXTO + BOTÓN AGREGAR
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            // Datos
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = producto.nombre,
                     fontWeight = FontWeight.Bold,
@@ -191,7 +177,7 @@ fun ProductoCard(
                     color = Color(0xFF5D4037)
                 )
                 Text(
-                    text = "Categoría: ${producto.categoria}",
+                    text = producto.categoria,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -204,27 +190,33 @@ fun ProductoCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // BOTÓN "AGREGAR AL CARRITO" (Visible para todos)
                 Button(
-                    onClick = { CarritoManager.agregarProducto(producto) },
-                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        // VIBRACIÓN AL AGREGAR AL CARRITO
+                        vibrar(context)
+                        CarritoManager.agregarProducto(producto)
+                    },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFC0CB), // Rosado pastel
+                        containerColor = Color(0xFFFFC0CB),
                         contentColor = Color.Black
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Agregar al carrito")
+                    Text("Agregar")
                 }
             }
 
-            // BOTÓN ELIMINAR (SOLO PARA ADMIN)
+            // Botones de Admin (Editar y Eliminar)
             if (esAdmin) {
-                IconButton(onClick = onEliminar) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar",
-                        tint = Color(0xFFD32F2F)
-                    )
+                Column {
+                    // BOTÓN EDITAR (Lápiz)
+                    IconButton(onClick = onEditar) {
+                        Icon(Icons.Default.Edit, "Editar", tint = Color(0xFF1976D2)) // Azul
+                    }
+                    // BOTÓN ELIMINAR (Basura)
+                    IconButton(onClick = onEliminar) {
+                        Icon(Icons.Default.Delete, "Eliminar", tint = Color(0xFFD32F2F)) // Rojo
+                    }
                 }
             }
         }

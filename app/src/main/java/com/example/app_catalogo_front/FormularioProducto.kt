@@ -15,18 +15,22 @@ import java.math.BigDecimal
 @Composable
 fun FormularioProductoScreen(
     viewModel: CatalogoViewModel,
+    productoAEditar: Producto? = null,
     onNavigateBack: () -> Unit
 ) {
-    var nombre by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
-    var precioStr by remember { mutableStateOf("") }
-    var urlImagen by remember { mutableStateOf("") }
+    // 1. Agregamos la variable para la URL
+    var nombre by remember { mutableStateOf(productoAEditar?.nombre ?: "") }
+    var categoria by remember { mutableStateOf(productoAEditar?.categoria ?: "") }
+    var precioStr by remember { mutableStateOf(productoAEditar?.precio?.toString() ?: "") }
+    var urlImagen by remember { mutableStateOf(productoAEditar?.urlImagen ?: "") } // <--- NUEVO
 
     var errorMensaje by remember { mutableStateOf<String?>(null) }
 
+    val titulo = if (productoAEditar != null) "Editar Producto" else "Nuevo Producto"
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Nuevo Producto") })
+            TopAppBar(title = { Text(titulo) })
         }
     ) { padding ->
         Column(
@@ -35,9 +39,6 @@ fun FormularioProductoScreen(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            Text("Ingresa los datos del pastel:", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
@@ -63,52 +64,59 @@ fun FormularioProductoScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campo opcional para la URL de la imagen
+            // 2. Campo nuevo para la URL de la imagen
             OutlinedTextField(
                 value = urlImagen,
                 onValueChange = { urlImagen = it },
-                label = { Text("URL de imagen (opcional)") },
+                label = { Text("URL de Imagen (Opcional)") },
+                placeholder = { Text("http://...") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             if (errorMensaje != null) {
-                Text(
-                    text = errorMensaje!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(text = errorMensaje!!, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             Button(
                 onClick = {
                     if (nombre.isBlank() || categoria.isBlank() || precioStr.isBlank()) {
-                        errorMensaje = "Por favor completa todos los campos obligatorios"
+                        errorMensaje = "Completa los campos obligatorios"
                     } else {
                         try {
                             val precio = BigDecimal(precioStr)
 
-                            val nuevoProducto = Producto(
-                                codigo = 0,                      // el backend genera el ID
-                                categoria = categoria,
-                                nombre = nombre,
-                                precio = precio,
-                                urlImagen = urlImagen.ifBlank { null }
-                            )
-
-                            viewModel.agregarProducto(nuevoProducto) {
-                                onNavigateBack()
+                            // 3. Enviamos la URL al crear o editar
+                            if (productoAEditar == null) {
+                                // MODO CREAR
+                                val nuevo = Producto(
+                                    codigo = 0,
+                                    categoria = categoria,
+                                    nombre = nombre,
+                                    precio = precio,
+                                    urlImagen = urlImagen.ifBlank { null } // Si está vacío, mandamos null
+                                )
+                                viewModel.agregarProducto(nuevo) { onNavigateBack() }
+                            } else {
+                                // MODO EDITAR
+                                val editado = productoAEditar.copy(
+                                    nombre = nombre,
+                                    categoria = categoria,
+                                    precio = precio,
+                                    urlImagen = urlImagen.ifBlank { null }
+                                )
+                                viewModel.actualizarProducto(editado.codigo, editado) { onNavigateBack() }
                             }
-
-                        } catch (_: NumberFormatException) {
-                            errorMensaje = "El precio debe ser un número válido"
+                        } catch (e: Exception) {
+                            errorMensaje = "Precio inválido"
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar Producto")
+                Text(if (productoAEditar != null) "Guardar Cambios" else "Crear Producto")
             }
 
             Spacer(modifier = Modifier.height(8.dp))

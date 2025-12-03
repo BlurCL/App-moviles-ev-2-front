@@ -1,5 +1,9 @@
 package com.example.app_catalogo_front
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -75,6 +79,10 @@ fun MainScreen() {
                                         putExtra("esAdmin", false)
                                     }
                                     context.startActivity(intent)
+                                }
+
+                                R.string.quienes_somos -> {
+                                    context.startActivity(Intent(context, QuienesSomosActivity::class.java))
                                 }
                             }
                         },
@@ -164,5 +172,19 @@ fun Footer() {
     ) {
         Text(stringResource(id = R.string.contact), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(id = R.string.address), style = MaterialTheme.typography.bodyMedium)
+    }
+
+}
+
+fun vibrar(context: Context) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    if (vibrator.hasVibrator()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Vibración moderna (50ms)
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            // Vibración antigua
+            vibrator.vibrate(50)
+        }
     }
 }
